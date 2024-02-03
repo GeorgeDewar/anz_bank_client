@@ -1,0 +1,104 @@
+#!/usr/bin/env ruby
+require "anz_bank_client"
+require "readline"
+require "optparse"
+require "thor"
+require "table_print"
+require "io/console"
+require "faraday"
+
+class AnzCli < Thor
+  def initialize(args = [], local_options = {}, config = {})
+    super(args, local_options, config)
+    @session = AnzBankClient::Session.new
+  end
+
+  package_name "anzcli"
+
+  class_option :format, aliases: "-f", desc: "Output format", default: "table", enum: %w[table json]
+
+  desc "login", "Login to ANZ"
+  long_desc <<~DESC
+    Login to ANZ. If the environment variables ANZ_CUSTOMER_NO and ANZ_PASSWORD are set, they will be used. Otherwise,
+    you will be prompted for your customer number and password. Session details are saved in ~/.anzbank.yaml and used
+    for future commands.
+  DESC
+  def login
+    if ENV["ANZ_CUSTOMER_NO"]
+      @session.login(ENV["ANZ_CUSTOMER_NO"], ENV["ANZ_PASSWORD"])
+    else
+      print "Customer number: "
+      customer_no = gets.chomp
+      print "Password: "
+      password = $stdin.noecho(&:gets).chomp
+      @session.login(customer_no, password)
+    end
+    cookies = @session.export
+    File.open("#{Dir.home}/.anzbank.yaml", "w") { |f| f.write(cookies) }
+  end
+
+  desc "ls-accounts", "List accounts"
+  def ls_accounts
+    check_session
+    if options[:format] == "json"
+      puts @session.list_accounts.to_json
+    else
+      tp @session.list_accounts
+    end
+  end
+
+  desc "ls-transactions ACCOUNT_NUMBER", "List transactions"
+  method_option :from, desc: "From date (YYYY-MM-DD)", default: Date.today.prev_month.to_s
+  method_option :to, desc: "To date (YYYY-MM-DD)", default: Date.today.to_s
+  def ls_transactions(account)
+    check_session
+    transactions = @session.list_transactions(account, options[:from], options[:to])
+    if options[:format] == "json"
+      puts transactions.to_json
+    else
+      txns = transactions.map do |t|
+        {
+          date: DateTime.parse(t[:createdDateTime] || t[:date]).strftime("%Y-%m-%d"),
+          time: t[:createdDateTime] ? DateTime.parse(t[:createdDateTime]).strftime("%H:%M:%S") : "",
+          posted_date: t[:postedDate],
+          type: t[:type],
+          description1: t[:details][0],
+          description2: t[:details][1],
+          amount: "% 12.2f" % t[:amount],
+          balance: "% 12.2f" % t[:balance],
+        }
+      end
+      tp txns
+    end
+  end
+
+  desc "logout", "Logout"
+  def logout
+    cookies = File.read("#{Dir.home}/.anzbank.yaml") rescue nil
+    if cookies
+      @session.load(cookies)
+      @session.logout
+      File.delete("#{Dir.home}/.anzbank.yaml") rescue nil
+    else
+      puts "No session to log out from"
+    end
+  end
+
+  def self.exit_on_failure?
+    true
+  end
+
+  private
+
+  # Fetch the session details if they exist, otherwise login
+  def check_session
+    cookies = File.read("#{Dir.home}/.anzbank.yaml") rescue nil
+    if cookies
+      @session.load(cookies)
+    else
+      login
+    end
+  end
+end
+
+AnzCli.start(ARGV)
