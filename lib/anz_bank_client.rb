@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
-require "dotenv/load"
+begin
+  require "dotenv/load"
+rescue LoadError
+  # Dotenv is not available, so move on without loading it. It's only used for development.
+end
 require_relative "anz_bank_client/version"
 require "faraday"
 require "faraday-cookie_jar"
