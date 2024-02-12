@@ -28,7 +28,7 @@ class AnzCli < Thor
       @session.login(ENV["ANZ_CUSTOMER_NO"], ENV["ANZ_PASSWORD"])
     else
       print "Customer number: "
-      customer_no = gets.chomp
+      customer_no = $stdin.gets.chomp
       print "Password: "
       password = $stdin.noecho(&:gets).chomp
       @session.login(customer_no, password)

@@ -9,6 +9,7 @@ require_relative "anz_bank_client/version"
 require "faraday"
 require "faraday-cookie_jar"
 require "faraday/follow_redirects"
+require "base64"
 
 module AnzBankClient
   class Error < StandardError; end
@@ -145,8 +146,12 @@ module AnzBankClient
     # @param end_date in iso8601 format
     def list_transactions(account_no, start_date, end_date)
       @logger.info "Getting transactions for account #{account_no} from #{start_date} to #{end_date}"
-      account_uuid = @initialise_response["viewableAccounts"]
-                     .find { |account| account["accountNo"] == account_no }["accountUuid"]
+      account_obj = @initialise_response["viewableAccounts"]
+                     .find { |account| account["accountNo"] == account_no }
+      if account_obj.nil?
+        raise "Could not find account #{account_no}"
+      end
+      account_uuid = account_obj["accountUuid"]
       raise "Could not find account #{account_no}" unless account_uuid
 
       response = @client.get("https://secure.anz.co.nz/IBCS/service/api/transactions?account=#{account_uuid}&ascending=false&from=#{start_date}&order=postdate&to=#{end_date}")
@@ -200,7 +205,7 @@ module AnzBankClient
       encrypted_password = public_key.public_encrypt(password, OpenSSL::PKey::RSA::PKCS1_PADDING)
 
       # Encode the encrypted message with base64
-      Base64.encode64(encrypted_password).gsub("\n", "")
+      ::Base64.encode64(encrypted_password).gsub("\n", "")
     end
   end
 end
