@@ -135,6 +135,8 @@ module AnzBankClient
           accountBalance: normalised_balance,
           availableFunds: account.dig("availableFunds", "amount"),
           isLiabilityType: account["isLoan"] || account["isCreditCard"],
+          supportsTransactions: true,
+          dynamicBalance: account["isInvestment"],
         }
       end
     end
