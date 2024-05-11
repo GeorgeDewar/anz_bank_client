@@ -66,7 +66,7 @@ class AnzCli < Thor
           description1: t[:details][0],
           description2: t[:details][1],
           amount: "% 12.2f" % t[:amount],
-          balance: "% 12.2f" % t[:balance],
+          balance: t[:balance] ? ("% 12.2f" % t[:balance]) : nil,
         }
       end
       tp txns

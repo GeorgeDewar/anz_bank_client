@@ -160,7 +160,10 @@ module AnzBankClient
       raise "Error getting transactions: #{response.status}\n\n#{response.body}" unless response.status == 200
 
       response_json = JSON.parse(response.body)
-      response_json["transactions"].map do |transaction|
+      transactions = response_json["transactions"]
+      # Ignore transactions without an amount - these can be informational messages like "Finance Charge Rate Changed Today"
+      transactions = transactions.filter{ |transaction| transaction["amount"] }
+      transactions.map do |transaction|
         {
           date: transaction["date"],
           postedDate: transaction["postedDate"],
