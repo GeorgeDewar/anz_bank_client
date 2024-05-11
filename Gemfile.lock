@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    anz_bank_client (0.1.4)
+    anz_bank_client (0.1.5)
       faraday (~> 2.7)
       faraday-cookie_jar (~> 0.0.7)
       faraday-follow_redirects (~> 0.3.0)
