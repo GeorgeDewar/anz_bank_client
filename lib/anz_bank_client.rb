@@ -70,8 +70,8 @@ module AnzBankClient
         raise "Error getting login page: #{login_page.status} #{login_page.body}"
       end
 
-      @encryption_key = login_page.body.match(/encryptionKey: "(.*)",/)[1]
-      @encryption_key_id = login_page.body.match(/encryptionKeyId: "(.*)",/)[1]
+      @encryption_key = login_page.body.match(/encryptionKey: "(.*)"/)[1]
+      @encryption_key_id = login_page.body.match(/encryptionKeyId: "(.*)"/)[1]
 
       # Encrypt password using encryption key
       encrypted_password = encrypt_password(password).strip
