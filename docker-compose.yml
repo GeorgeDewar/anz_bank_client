@@ -1,0 +1,10 @@
+services:
+  anzbank:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - ANZ_CUSTOMER_NO=${ANZ_CUSTOMER_NO}
+      - ANZ_PASSWORD=${ANZ_PASSWORD}
+    stdin_open: true
+    tty: true

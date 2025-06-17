@@ -82,6 +82,47 @@ Finally, log out.
 It's very important to log out, as ANZ's internet banking application has a maximum number of concurrent sessions and
 you could lock yourself out of your account for a while if you create too many of them without logging out.
 
+## Running with Docker Compose
+
+You can use Docker Compose to run this gem in a containerized environment.
+
+1. **Start the service:**
+
+   ```sh
+   docker compose up -d
+   ```
+
+2. **Access the running container:**
+
+   ```sh
+   docker ps
+
+   # Find the container name or ID for the ANZ Bank Client service, then run:
+
+   docker exec -it <container_name_or_id> /bin/bash
+   ```
+
+   From inside the container, you can run CLI commands such as:
+
+   ```sh
+   /app/exe/anzcli login
+   /app/exe/anzcli ls-accounts
+   ```
+
+3. **Configure environment variables:**
+
+   Set your credentials using environment variables, either in a `.env` file or directly in your Compose configuration:
+
+   - `ANZ_CUSTOMER_NO` – Your ANZ customer number
+   - `ANZ_PASSWORD` – Your ANZ password
+
+   Example `.env` file:
+
+   ```env
+   ANZ_CUSTOMER_NO=your_customer_number
+   ANZ_PASSWORD=your_password
+   ```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
